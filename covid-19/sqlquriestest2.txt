@@ -1,0 +1,157 @@
+//create inner table
+create type status_t as object(
+	sdate date,
+	sconfirm number,
+	sdeath number,
+	srecovery number,
+	member function retaininhospital return number,
+	member function precentageofdeath return number,
+	member function precentageofrecovery return number
+)
+/
+
+
+//create or replace type body status_t as
+create or replace type body status_t as
+member function retaininhospital return number is
+begin
+return sconfirm-(sdeath+srecovery);
+end;
+member function precentageofdeath return number is
+begin
+return (sdeath/sconfirm)*100;
+end;
+member function precentageofrecovery return number is
+begin
+return (srecovery/sconfirm)*100;
+end;
+end;
+/
+
+
+//convert status_t into type 
+create type covid19_status_t as table of status_t
+/
+
+
+//creat type of main table
+create type covid19_all_t as object(
+	id int,
+	country varchar(70),
+	statustbl covid19_status_t
+)
+/
+
+//creat table of main table
+create table covid19_all of covid19_all_t(
+	id primary key
+)nested table statustbl store as statustbl_ntb
+/
+
+
+//insert date
+insert into covid19_all values(covid19_all_t(001,'sri lanka',covid19_status_t(status_t('16-OCT-1995',10,2,1)))) 
+/ 
+insert into covid19_all values(covid19_all_t(002,'india',covid19_status_t(status_t('16-JAN-1990',122,20,31))))
+/  
+insert into covid19_all values(covid19_all_t(003,'uk',covid19_status_t(status_t('17-JAN-1990',100,2,3),status_t('18-JAN-1990',130,4,5))))  
+/
+insert into covid19_all values(covid19_all_t(004,'usa',covid19_status_t(status_t('17-JAN-1990',100,2,3),status_t('18-JAN-1990',130,4,5),status_t('18-JAN-1990',230,4,5))))  
+/
+
+
+//after i idea
+select c.id,s.retaininhospital(),s.sdeath,LAG(s.sdeath) OVER (PARTITION BY c.id
+ORDER BY c.id) as death_priviouse,s. 
+from covid19_all c,table(c.statustbl) s
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+create or replace type body status_t as
+member function precentageofdeath return number is
+death number;
+begin
+death:=(sdeath/sconfirm)*100;
+return death;
+end;
+end;
+/
+
+
+create or replace type body status_t as
+member function precentageofrecovery return number is
+recovery number;
+begin
+recovery:=(srecovery/sconfirm)*100;
+return recovery;
+end;
+end;
+/
+
+
+//convert status_t into type 
+create type covid19_status_t as table of status_t
+/
+
+
+
+
+
+//creat type of main table
+create type covid19_all_t as object(
+	id int,
+	country varchar(70),
+	statustbl covid19_status_t
+)
+/
+
+
+//creat table of main table
+create table covid19_all of covid19_all_t(
+	id primary key
+)nested table statustbl store as statustbl_ntb
+/
+
+//drop table covid19_all
+
+//insert date
+insert into covid19_all values(covid19_all_t(001,'sri lanka',covid19_status_t(status_t('16-OCT-1995',10,2,1))))  
+insert into covid19_all values(covid19_all_t(002,'india',covid19_status_t(status_t('16-JAN-1990',122,20,31))))  
+insert into covid19_all values(covid19_all_t(003,'uk',covid19_status_t(status_t('17-JAN-1990',100,2,3),status_t('18-JAN-1990',130,4,5))))  
+insert into covid19_all values(covid19_all_t(004,'usa',covid19_status_t(status_t('17-JAN-1990',100,2,3),status_t('18-JAN-1990',130,4,5),status_t('18-JAN-1990',230,4,5))))  
+
+//after i idea
+select c.id,s.retaininhospital(),s.precentageofdeath(),s.precentageofrecovery(),s.sdeath,LAG(s.sdeath) OVER (PARTITION BY c.id
+ORDER BY c.id) as death_priviouse 
+from covid19_all c,table(c.statustbl) s
+/
+
+
+
+
+select c.id,c.country
+from covid19_all c
+
+
+
+
+
+
+
+
+
+
